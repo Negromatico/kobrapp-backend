@@ -41,3 +41,70 @@ exports.updateUserAppearance = async (req, res) => {
     res.status(500).json({ mensaje: 'Error en el servidor.', error: err.message });
   }
 };
+
+// Editar datos de usuario (nombre, correo, rol, bloqueado)
+exports.editUser = async (req, res) => {
+  try {
+    if (req.usuario.rol !== 'admin') {
+      return res.status(403).json({ mensaje: 'No autorizado.' });
+    }
+    const { id } = req.params;
+    const { nombreCompleto, correo, rol, bloqueado } = req.body;
+    const update = {};
+    if (nombreCompleto) update.nombreCompleto = nombreCompleto;
+    if (correo) update.correo = correo;
+    if (rol) update.rol = rol;
+    if (typeof bloqueado === 'boolean') update.bloqueado = bloqueado;
+    const user = await User.findByIdAndUpdate(id, update, { new: true, select: '-contrasena' });
+    if (!user) return res.status(404).json({ mensaje: 'Usuario no encontrado.' });
+    res.json({ usuario: user });
+  } catch (err) {
+    res.status(500).json({ mensaje: 'Error en el servidor.', error: err.message });
+  }
+};
+
+// Eliminar usuario
+exports.deleteUser = async (req, res) => {
+  try {
+    if (req.usuario.rol !== 'admin') {
+      return res.status(403).json({ mensaje: 'No autorizado.' });
+    }
+    const { id } = req.params;
+    const user = await User.findByIdAndDelete(id);
+    if (!user) return res.status(404).json({ mensaje: 'Usuario no encontrado.' });
+    res.json({ mensaje: 'Usuario eliminado.' });
+  } catch (err) {
+    res.status(500).json({ mensaje: 'Error en el servidor.', error: err.message });
+  }
+};
+
+// Resetear contraseña de usuario (genera una nueva y la retorna)
+const bcrypt = require('bcryptjs');
+exports.resetPassword = async (req, res) => {
+  try {
+    if (req.usuario.rol !== 'admin') {
+      return res.status(403).json({ mensaje: 'No autorizado.' });
+    }
+    const { id } = req.params;
+    const nuevaContrasena = Math.random().toString(36).slice(-8);
+    const hash = await bcrypt.hash(nuevaContrasena, 10);
+    const user = await User.findByIdAndUpdate(id, { contrasena: hash }, { new: true, select: '-contrasena' });
+    if (!user) return res.status(404).json({ mensaje: 'Usuario no encontrado.' });
+    res.json({ usuario: user, nuevaContrasena });
+  } catch (err) {
+    res.status(500).json({ mensaje: 'Error en el servidor.', error: err.message });
+  }
+};
+  try {
+    if (req.usuario.rol !== 'admin') {
+      return res.status(403).json({ mensaje: 'No autorizado.' });
+    }
+    const { id } = req.params;
+    const { appearance } = req.body;
+    const user = await User.findByIdAndUpdate(id, { appearance }, { new: true, select: '-contrasena' });
+    if (!user) return res.status(404).json({ mensaje: 'Usuario no encontrado.' });
+    res.json({ usuario: user });
+  } catch (err) {
+    res.status(500).json({ mensaje: 'Error en el servidor.', error: err.message });
+  }
+};

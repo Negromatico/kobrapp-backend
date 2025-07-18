@@ -10,4 +10,13 @@ router.get('/accounts', auth, adminController.listAccountsAndDebts);
 // Actualizar apariencia de usuario (solo admin)
 router.put('/users/:id/appearance', auth, adminController.updateUserAppearance);
 
+// Editar datos de usuario
+router.put('/users/:id', auth, adminController.editUser);
+
+// Eliminar usuario
+router.delete('/users/:id', auth, adminController.deleteUser);
+
+// Resetear contraseña de usuario
+router.post('/users/:id/reset-password', auth, adminController.resetPassword);
+
 module.exports = router;
