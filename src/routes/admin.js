@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
-const auth = require('../middleware/auth');
+const auth = require('../middlewares/auth');
 
 // Listar cuentas y deudas (solo admin)
 router.get('/accounts', auth, adminController.listAccountsAndDebts);
