@@ -12,6 +12,11 @@ const UserSchema = new Schema({
   cedulaUrl: { type: String },
   creadoEn: { type: Date, default: Date.now },
   bloqueado: { type: Boolean, default: false },
+  appearance: {
+    themeColor: { type: String, default: '#1976d2' }, // color principal
+    avatarUrl: { type: String }, // imagen de perfil
+    layout: { type: String, default: 'default' }, // tipo de layout
+  },
 });
 
 module.exports = mongoose.model('User', UserSchema);
