@@ -1,0 +1,150 @@
+{
+  "info": {
+    "_postman_id": "b2b4c5a2-1234-4e5a-8f6e-abcdef123456",
+    "name": "Kobrapp Backend API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth - Registro",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"nombreCompleto\": \"Admin Ejemplo\",\n  \"documento\": \"123456789\",\n  \"correo\": \"admin@kobrapp.com\",\n  \"contrasena\": \"admin123\",\n  \"rol\": \"admin\"\n}" },
+        "url": { "raw": "{{base_url}}/api/auth/register", "host": [ "{{base_url}}" ], "path": [ "api", "auth", "register" ] }
+      }
+    },
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"correo\": \"admin@kobrapp.com\",\n  \"contrasena\": \"admin123\"\n}" },
+        "url": { "raw": "{{base_url}}/api/auth/login", "host": [ "{{base_url}}" ], "path": [ "api", "auth", "login" ] }
+      }
+    },
+    {
+      "name": "Usuarios - Perfil",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "url": { "raw": "{{base_url}}/api/users/me", "host": [ "{{base_url}}" ], "path": [ "api", "users", "me" ] }
+      }
+    },
+    {
+      "name": "Usuarios - Editar Perfil",
+      "request": {
+        "method": "PUT",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"nombreCompleto\": \"Nuevo Nombre\"\n}" },
+        "url": { "raw": "{{base_url}}/api/users/me", "host": [ "{{base_url}}" ], "path": [ "api", "users", "me" ] }
+      }
+    },
+    {
+      "name": "Usuarios - Listar (admin)",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "url": { "raw": "{{base_url}}/api/users", "host": [ "{{base_url}}" ], "path": [ "api", "users" ] }
+      }
+    },
+    {
+      "name": "Usuarios - Bloquear (admin)",
+      "request": {
+        "method": "PUT",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "url": { "raw": "{{base_url}}/api/users/block/:id", "host": [ "{{base_url}}" ], "path": [ "api", "users", "block", ":id" ] }
+      }
+    },
+    {
+      "name": "Préstamos - Crear",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"cliente\": \"<id_cliente>\",\n  \"monto\": 1000,\n  \"interes\": 10,\n  \"fechaInicio\": \"2025-07-04\",\n  \"cuotas\": 10,\n  \"frecuencia\": \"mensual\"\n}" },
+        "url": { "raw": "{{base_url}}/api/loans", "host": [ "{{base_url}}" ], "path": [ "api", "loans" ] }
+      }
+    },
+    {
+      "name": "Préstamos - Listar",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "url": { "raw": "{{base_url}}/api/loans", "host": [ "{{base_url}}" ], "path": [ "api", "loans" ] }
+      }
+    },
+    {
+      "name": "Pagos - Registrar",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"loan\": \"<id_prestamo>\",\n  \"monto\": 100,\n  \"comprobanteUrl\": \"\"\n}" },
+        "url": { "raw": "{{base_url}}/api/payments", "host": [ "{{base_url}}" ], "path": [ "api", "payments" ] }
+      }
+    },
+    {
+      "name": "Pagos - Por préstamo",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "url": { "raw": "{{base_url}}/api/payments/loan/:loanId", "host": [ "{{base_url}}" ], "path": [ "api", "payments", "loan", ":loanId" ] }
+      }
+    },
+    {
+      "name": "Comisiones - Registrar",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"monto\": 50\n}" },
+        "url": { "raw": "{{base_url}}/api/commissions", "host": [ "{{base_url}}" ], "path": [ "api", "commissions" ] }
+      }
+    },
+    {
+      "name": "Comisiones - Listar propias",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "url": { "raw": "{{base_url}}/api/commissions/my", "host": [ "{{base_url}}" ], "path": [ "api", "commissions", "my" ] }
+      }
+    },
+    {
+      "name": "Notificaciones - Enviar",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"usuario\": \"<id_usuario>\",\n  \"tipo\": \"recordatorio\",\n  \"mensaje\": \"Tienes una cuota próxima a vencer\"\n}" },
+        "url": { "raw": "{{base_url}}/api/notifications", "host": [ "{{base_url}}" ], "path": [ "api", "notifications" ] }
+      }
+    },
+    {
+      "name": "Notificaciones - Global",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"tipo\": \"global\",\n  \"mensaje\": \"Mensaje global para todos los usuarios\"\n}" },
+        "url": { "raw": "{{base_url}}/api/notifications/global", "host": [ "{{base_url}}" ], "path": [ "api", "notifications", "global" ] }
+      }
+    },
+    {
+      "name": "Rutas de cobro - Crear",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"clientes\": [\n    {\n      \"cliente\": \"<id_cliente>\",\n      \"ubicacion\": { \"lat\": 10.123, \"lng\": -74.123 }\n    }\n  ],\n  \"optimizada\": false\n}" },
+        "url": { "raw": "{{base_url}}/api/routes", "host": [ "{{base_url}}" ], "path": [ "api", "routes" ] }
+      }
+    },
+    {
+      "name": "Reportes - Estadísticas",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "url": { "raw": "{{base_url}}/api/reports/stats", "host": [ "{{base_url}}" ], "path": [ "api", "reports", "stats" ] }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:4000" },
+    { "key": "token", "value": "" }
+  ]
+}
