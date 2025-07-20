@@ -200,3 +200,127 @@ exports.getDashboardStats = async (req, res) => {
     res.status(500).json({ mensaje: 'Error en el servidor.', error: err.message });
   }
 };
+
+exports.getClientDashboardStats = async (req, res) => {
+  try {
+    let filter = {};
+    if (req.usuario.rol === 'cliente') {
+      filter.cliente = req.usuario._id;
+    } else {
+      return res.status(403).json({ mensaje: 'Solo los clientes pueden acceder a estas estadísticas.' });
+    }
+
+    // Obtener todos los préstamos del cliente
+    const loans = await Loan.find(filter)
+      .populate('cliente', 'nombreCompleto correo documento')
+      .populate('prestamista', 'nombreCompleto correo telefono');
+
+    if (loans.length === 0) {
+      return res.json({
+        saldoPendiente: 0,
+        proximaCuotaFecha: null,
+        proximaCuotaMonto: 0,
+        enMora: false,
+        totalPrestamos: 0,
+        totalPagado: 0,
+        prestamista: null,
+        historialPagos: []
+      });
+    }
+
+    // Calcular estadísticas del cliente
+    let saldoPendienteTotal = 0;
+    let proximaCuotaFecha = null;
+    let proximaCuotaMonto = 0;
+    let enMora = false;
+    let totalPrestamos = 0;
+    let totalPagado = 0;
+    let prestamista = loans[0].prestamista; // Asumir un prestamista principal
+    let historialPagos = [];
+
+    const hoy = new Date();
+
+    for (const loan of loans) {
+      totalPrestamos += loan.monto;
+
+      // Calcular cuota mensual
+      const tasaMensual = loan.interes / 100 / 12;
+      const cuotaMensual = loan.monto * (tasaMensual * Math.pow(1 + tasaMensual, loan.cuotas)) / (Math.pow(1 + tasaMensual, loan.cuotas) - 1);
+      
+      // Calcular pagos realizados
+      const fechaInicio = new Date(loan.fechaInicio);
+      const mesesTranscurridos = Math.floor((hoy - fechaInicio) / (1000 * 60 * 60 * 24 * 30));
+      const cuotasPagadas = Math.min(mesesTranscurridos, loan.cuotas);
+      const pagosRealizados = cuotasPagadas * cuotaMensual;
+      
+      totalPagado += pagosRealizados;
+      
+      // Calcular saldo pendiente
+      const saldoPendiente = (loan.cuotas - cuotasPagadas) * cuotaMensual;
+      saldoPendienteTotal += saldoPendiente;
+
+      // Determinar próxima cuota
+      if (cuotasPagadas < loan.cuotas) {
+        const proximoPago = new Date(fechaInicio);
+        proximoPago.setMonth(proximoPago.getMonth() + cuotasPagadas + 1);
+        
+        if (!proximaCuotaFecha || proximoPago < proximaCuotaFecha) {
+          proximaCuotaFecha = proximoPago;
+          proximaCuotaMonto = cuotaMensual;
+        }
+
+        // Verificar si está en mora
+        const diasVencido = Math.floor((hoy - proximoPago) / (1000 * 60 * 60 * 24));
+        if (diasVencido > 0) {
+          enMora = true;
+        }
+      }
+
+      // Generar historial de pagos simulado
+      for (let i = 0; i < cuotasPagadas; i++) {
+        const fechaPago = new Date(fechaInicio);
+        fechaPago.setMonth(fechaPago.getMonth() + i + 1);
+        historialPagos.push({
+          fecha: fechaPago,
+          valor: Math.round(cuotaMensual * 100) / 100,
+          estado: 'pagado'
+        });
+      }
+
+      // Agregar próximo pago pendiente si existe
+      if (cuotasPagadas < loan.cuotas) {
+        const proximoPago = new Date(fechaInicio);
+        proximoPago.setMonth(proximoPago.getMonth() + cuotasPagadas + 1);
+        historialPagos.push({
+          fecha: proximoPago,
+          valor: Math.round(cuotaMensual * 100) / 100,
+          estado: 'pendiente'
+        });
+      }
+    }
+
+    // Ordenar historial por fecha
+    historialPagos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+    const clientStats = {
+      saldoPendiente: Math.round(saldoPendienteTotal * 100) / 100,
+      proximaCuotaFecha: proximaCuotaFecha,
+      proximaCuotaMonto: Math.round(proximaCuotaMonto * 100) / 100,
+      enMora: enMora,
+      totalPrestamos: Math.round(totalPrestamos * 100) / 100,
+      totalPagado: Math.round(totalPagado * 100) / 100,
+      prestamista: {
+        nombre: prestamista.nombreCompleto,
+        correo: prestamista.correo,
+        telefono: prestamista.telefono || 'No disponible'
+      },
+      historialPagos: historialPagos
+    };
+
+    console.log('Client dashboard stats calculated:', clientStats);
+    res.json(clientStats);
+  } catch (err) {
+    console.error('Error calculating client dashboard stats:', err);
+    res.status(500).json({ mensaje: 'Error en el servidor.', error: err.message });
+  }
+};
