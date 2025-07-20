@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 const User = require('../models/User');
+const NotificationService = require('../services/notificationService');
 require('dotenv').config();
 
 // Registro
@@ -23,6 +24,16 @@ router.post('/register', async (req, res) => {
     // Crear usuario
     user = new User({ nombreCompleto, documento, correo, contrasena: hashedPassword, rol });
     await user.save();
+    
+    // Enviar notificación de bienvenida
+    try {
+      await NotificationService.notifyWelcome(user._id, rol);
+      console.log(`Notificación de bienvenida enviada a ${nombreCompleto}`);
+    } catch (notifError) {
+      console.error('Error enviando notificación de bienvenida:', notifError);
+      // No fallar el registro por errores de notificación
+    }
+    
     res.status(201).json({ mensaje: 'Usuario registrado correctamente.' });
   } catch (err) {
     res.status(500).json({ mensaje: 'Error en el servidor.', error: err.message });
