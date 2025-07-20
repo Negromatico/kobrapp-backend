@@ -42,3 +42,20 @@ exports.listUsers = async (req, res) => {
     res.status(500).json({ mensaje: 'Error en el servidor.', error: err.message });
   }
 };
+
+exports.getClients = async (req, res) => {
+  try {
+    // Obtener todos los usuarios que son clientes (rol 'cliente' o sin rol específico)
+    const clients = await User.find({
+      $or: [
+        { rol: 'cliente' },
+        { rol: { $exists: false } },
+        { rol: null }
+      ]
+    }).select('-contrasena');
+    
+    res.json(clients);
+  } catch (err) {
+    res.status(500).json({ mensaje: 'Error en el servidor.', error: err.message });
+  }
+};

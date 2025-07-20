@@ -12,6 +12,9 @@ router.put('/me', auth, userController.updateProfile);
 // Solo admin puede listar y bloquear usuarios
 const checkRoles = require('../middlewares/roles');
 
+// Endpoint para obtener lista de clientes (para validación en préstamos)
+router.get('/clients', auth, userController.getClients);
+
 router.get('/', auth, checkRoles(['admin']), userController.listUsers);
 router.put('/block/:id', auth, checkRoles(['admin']), userController.blockUser);
 
