@@ -108,10 +108,95 @@ exports.updateLoan = async (req, res) => {
 
 exports.deleteLoan = async (req, res) => {
   try {
-    const loan = await Loan.findByIdAndDelete(req.params.id);
-    if (!loan) return res.status(404).json({ mensaje: 'Préstamo no encontrado.' });
-    res.json({ mensaje: 'Préstamo eliminado.' });
+    const loan = await Loan.findById(req.params.id);
+    if (!loan) {
+      return res.status(404).json({ mensaje: 'Préstamo no encontrado.' });
+    }
+    await Loan.findByIdAndDelete(req.params.id);
+    res.json({ mensaje: 'Préstamo eliminado correctamente.' });
   } catch (err) {
+    res.status(500).json({ mensaje: 'Error en el servidor.', error: err.message });
+  }
+};
+
+exports.getDashboardStats = async (req, res) => {
+  try {
+    let filter = {};
+    if (req.usuario.rol === 'prestamista') {
+      filter.prestamista = req.usuario._id;
+    } else {
+      return res.status(403).json({ mensaje: 'Solo los prestamistas pueden acceder a estas estadísticas.' });
+    }
+
+    // Obtener todos los préstamos del prestamista
+    const loans = await Loan.find(filter)
+      .populate('cliente', 'nombreCompleto correo documento')
+      .populate('prestamista', 'nombreCompleto correo');
+
+    // Calcular estadísticas
+    let totalPrestado = 0;
+    let totalRecuperado = 0;
+    let gananciaTotal = 0;
+    let clientesEnMora = 0;
+    let clientesUnicos = new Set();
+    let prestamosActivos = [];
+
+    const hoy = new Date();
+
+    for (const loan of loans) {
+      totalPrestado += loan.monto;
+      clientesUnicos.add(loan.cliente._id.toString());
+
+      // Calcular cuota mensual
+      const tasaMensual = loan.interes / 100 / 12;
+      const cuotaMensual = loan.monto * (tasaMensual * Math.pow(1 + tasaMensual, loan.cuotas)) / (Math.pow(1 + tasaMensual, loan.cuotas) - 1);
+      
+      // Calcular pagos realizados (simulado - en un sistema real esto vendría de una tabla de pagos)
+      const fechaInicio = new Date(loan.fechaInicio);
+      const mesesTranscurridos = Math.floor((hoy - fechaInicio) / (1000 * 60 * 60 * 24 * 30));
+      const cuotasPagadas = Math.min(mesesTranscurridos, loan.cuotas);
+      const pagosRealizados = cuotasPagadas * cuotaMensual;
+      
+      totalRecuperado += pagosRealizados;
+      gananciaTotal += Math.max(0, pagosRealizados - loan.monto);
+
+      // Determinar si está en mora (más de 30 días sin pagar)
+      const proximoPago = new Date(fechaInicio);
+      proximoPago.setMonth(proximoPago.getMonth() + cuotasPagadas + 1);
+      const diasVencido = Math.floor((hoy - proximoPago) / (1000 * 60 * 60 * 24));
+      const enMora = diasVencido > 30 && cuotasPagadas < loan.cuotas;
+      
+      if (enMora) {
+        clientesEnMora++;
+      }
+
+      // Agregar a préstamos activos si no está completamente pagado
+      if (cuotasPagadas < loan.cuotas) {
+        prestamosActivos.push({
+          id: loan._id,
+          clienteNombre: loan.cliente.nombreCompleto,
+          monto: loan.monto,
+          saldoPendiente: (loan.cuotas - cuotasPagadas) * cuotaMensual,
+          enMora: enMora,
+          proximoPago: proximoPago
+        });
+      }
+    }
+
+    const stats = {
+      totalPrestado: Math.round(totalPrestado * 100) / 100,
+      totalRecuperado: Math.round(totalRecuperado * 100) / 100,
+      gananciaTotal: Math.round(gananciaTotal * 100) / 100,
+      clientesEnMora: clientesEnMora,
+      totalClientes: clientesUnicos.size,
+      comisionPendiente: 0, // Implementar según lógica de comisiones
+      prestamosActivos: prestamosActivos
+    };
+
+    console.log('Dashboard stats calculated:', stats);
+    res.json(stats);
+  } catch (err) {
+    console.error('Error calculating dashboard stats:', err);
     res.status(500).json({ mensaje: 'Error en el servidor.', error: err.message });
   }
 };

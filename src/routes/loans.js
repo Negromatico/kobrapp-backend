@@ -5,6 +5,7 @@ const auth = require('../middlewares/auth');
 const loanController = require('../controllers/loanController');
 
 // Todas las rutas protegidas
+router.get('/dashboard-stats', auth, loanController.getDashboardStats);
 router.post('/', auth, loanController.createLoan);
 router.get('/', auth, loanController.listLoans);
 router.get('/:id', auth, loanController.getLoan);
