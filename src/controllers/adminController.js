@@ -95,16 +95,3 @@ exports.resetPassword = async (req, res) => {
     res.status(500).json({ mensaje: 'Error en el servidor.', error: err.message });
   }
 };
-  try {
-    if (req.usuario.rol !== 'admin') {
-      return res.status(403).json({ mensaje: 'No autorizado.' });
-    }
-    const { id } = req.params;
-    const { appearance } = req.body;
-    const user = await User.findByIdAndUpdate(id, { appearance }, { new: true, select: '-contrasena' });
-    if (!user) return res.status(404).json({ mensaje: 'Usuario no encontrado.' });
-    res.json({ usuario: user });
-  } catch (err) {
-    res.status(500).json({ mensaje: 'Error en el servidor.', error: err.message });
-  }
-};
