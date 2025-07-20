@@ -19,4 +19,7 @@ router.delete('/users/:id', auth, adminController.deleteUser);
 // Resetear contraseña de usuario
 router.post('/users/:id/reset-password', auth, adminController.resetPassword);
 
+// Enviar notificación de pago a prestamista
+router.post('/users/:id/notify-payment', auth, adminController.sendPaymentNotification);
+
 module.exports = router;

@@ -95,3 +95,45 @@ exports.resetPassword = async (req, res) => {
     res.status(500).json({ mensaje: 'Error en el servidor.', error: err.message });
   }
 };
+
+// Enviar notificación de próximo pago a prestamista
+const Notification = require('../models/Notification');
+exports.sendPaymentNotification = async (req, res) => {
+  try {
+    if (req.usuario.rol !== 'admin') {
+      return res.status(403).json({ mensaje: 'No autorizado.' });
+    }
+    const { id } = req.params;
+    const { mensaje } = req.body;
+    
+    // Verificar que el usuario existe y es prestamista
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ mensaje: 'Usuario no encontrado.' });
+    if (user.rol !== 'prestamista') {
+      return res.status(400).json({ mensaje: 'Solo se pueden enviar notificaciones a prestamistas.' });
+    }
+    
+    // Crear la notificación
+    const notification = new Notification({
+      usuario: id,
+      tipo: 'pago_proximo',
+      titulo: 'Recordatorio de Pago',
+      mensaje: mensaje || `Hola ${user.nombreCompleto}, te recordamos que tienes un pago próximo. Por favor, realiza tu pago para mantener tu cuenta al día.`,
+      fecha: new Date(),
+      leida: false
+    });
+    
+    await notification.save();
+    
+    // Aquí podrías agregar lógica para enviar email/SMS real
+    // Por ejemplo: await sendEmail(user.correo, notification.titulo, notification.mensaje);
+    
+    res.json({ 
+      mensaje: 'Notificación enviada exitosamente',
+      notificacion: notification,
+      usuario: user.nombreCompleto
+    });
+  } catch (err) {
+    res.status(500).json({ mensaje: 'Error en el servidor.', error: err.message });
+  }
+};
