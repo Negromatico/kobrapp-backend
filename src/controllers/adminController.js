@@ -116,8 +116,7 @@ exports.sendPaymentNotification = async (req, res) => {
     // Crear la notificación
     const notification = new Notification({
       usuario: id,
-      tipo: 'pago_proximo',
-      titulo: 'Recordatorio de Pago',
+      tipo: 'recordatorio',
       mensaje: mensaje || `Hola ${user.nombreCompleto}, te recordamos que tienes un pago próximo. Por favor, realiza tu pago para mantener tu cuenta al día.`,
       fecha: new Date(),
       leida: false
